@@ -1,5 +1,8 @@
 package com.uncc.mobileappdev.inclass06;
 
+import android.app.ActionBar;
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -20,10 +23,22 @@ import java.util.ArrayList;
 
 public class AsyncData extends AsyncTask<String, Void, ArrayList<Articles>> {
 
-    IData activity;
+    ProgressDialog progressDialog;
+    IData iDataActivity;
+    Activity activity;
 
-    public AsyncData(IData activity){
+    public AsyncData(IData iDataActivity, Activity activity){
+        this.iDataActivity = iDataActivity;
         this.activity = activity;
+    }
+
+    @Override
+    protected void onPreExecute() {
+        progressDialog = new ProgressDialog(activity);
+        progressDialog.setMessage("Loading Articles...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
     }
 
     @Override
@@ -86,10 +101,11 @@ public class AsyncData extends AsyncTask<String, Void, ArrayList<Articles>> {
     @Override
     protected  void onPostExecute(ArrayList<Articles> result){
         if(result != null && !result.isEmpty()){
-            activity.setupData(result);
+            iDataActivity.setupData(result);
             for(Articles p : result){
                 Log.d("Demo", p.getAuthor());
             }
+            progressDialog.dismiss();
         } else {
             Log.d("Demo", "NULL result!");
         }

@@ -5,21 +5,12 @@ package com.uncc.mobileappdev.inclass06;
  */
 
 class Articles {
-    private Source source;
     private String author;
     private String title;
     private String description;
     private String url;
     private String urlToImage;
     private String publishedAtDate;
-
-    public Source getSource() {
-        return source;
-    }
-
-    public void setSource(Source source) {
-        this.source = source;
-    }
 
     public String getAuthor() {
         return author;

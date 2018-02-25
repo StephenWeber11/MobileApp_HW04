@@ -1,10 +1,10 @@
 package com.uncc.mobileappdev.inclass06;
 
 import android.content.DialogInterface;
-import android.location.Address;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
+import android.net.Uri;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,24 +14,17 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements AsyncData.IData {
 
     private String selectedCategory;
+    private String link;
     private int currentIndex = 0;
     private ArrayList<Articles> articles = new ArrayList<>();
     EditText searchBar;
@@ -45,16 +38,37 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
 
 
 
-    private static final ArrayList<String> CATEGORIES = new ArrayList<>();
+    private static final HashMap<String,String> CATEGORIESMAP = new HashMap<>();
 
     static{
+        CATEGORIESMAP.put("Top Stories","http://rss.cnn.com/rss/cnn_topstories.rss");
+        CATEGORIESMAP.put("World","http://rss.cnn.com/rss/cnn_world.rss");
+        CATEGORIESMAP.put("U.S.","http://rss.cnn.com/rss/cnn_us.rss");
+        CATEGORIESMAP.put("Business","http://rss.cnn.com/rss/money_latest.rss");
+        CATEGORIESMAP.put("Politics","http://rss.cnn.com/rss/cnn_allpolitics.rss");
+        CATEGORIESMAP.put("Technology","http://rss.cnn.com/rss/cnn_tech.rss");
+        CATEGORIESMAP.put("Health","http://rss.cnn.com/rss/cnn_health.rss");
+        CATEGORIESMAP.put("Entertainment","http://rss.cnn.com/rss/cnn_showbiz.rss");
+        CATEGORIESMAP.put("Travel","http://rss.cnn.com/rss/cnn_travel.rss");
+        CATEGORIESMAP.put("Living","http://rss.cnn.com/rss/cnn_living.rss");
+        CATEGORIESMAP.put("Most Recent","http://rss.cnn.com/rss/cnn_latest.rss");
+    }
+
+    private static final ArrayList<String> CATEGORIES = new ArrayList<>();
+
+    static {
+        CATEGORIES.add("Top Stories");
+        CATEGORIES.add("World");
+        CATEGORIES.add("U.S.");
         CATEGORIES.add("Business");
-        CATEGORIES.add("Entertainment");
-        CATEGORIES.add("General");
-        CATEGORIES.add("Health");
-        CATEGORIES.add("Science");
-        CATEGORIES.add("Sports");
+        CATEGORIES.add("Politics");
         CATEGORIES.add("Technology");
+        CATEGORIES.add("Health");
+        CATEGORIES.add("Entertainment");
+        CATEGORIES.add("Travel");
+        CATEGORIES.add("Living");
+        CATEGORIES.add("Most Recent");
+
     }
 
     @Override
@@ -92,6 +106,14 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
             }
         });
 
+        main.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent browse = new Intent( Intent.ACTION_VIEW , Uri.parse(getLink()));
+                startActivity(browse);
+            }
+        });
+
     }
 
     private boolean isConnected() {
@@ -101,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
         if (networkInfo == null || !networkInfo.isConnected() ||
                 (networkInfo.getType() != ConnectivityManager.TYPE_WIFI
                         && networkInfo.getType() != ConnectivityManager.TYPE_MOBILE)) {
+            Toast toast = Toast.makeText(this,"No Internet Connection", Toast.LENGTH_SHORT);
             return false;
         }
         return true;
@@ -122,8 +145,7 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
                 selectedCategory = arrayAdapter.getItem(which);
                 searchBar.setText(selectedCategory);
 
-                String queryParam = "&category=" + selectedCategory;
-                new AsyncData(MainActivity.this,MainActivity.this).execute("https://newsapi.org/v2/top-headlines?country=us&apiKey=ebb2dacd7f314b5fa3300c914e144121" + queryParam);
+                new AsyncData(MainActivity.this,MainActivity.this).execute(CATEGORIESMAP.get(selectedCategory));
                 currentIndex = 0;
 
                 dialog.dismiss();
@@ -136,13 +158,19 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
     @Override
     public void setupData(ArrayList<Articles> result) {
         articles = result;
+        if(articles == null || articles.size() == 0){
+            Toast toast = Toast.makeText(this,"No News Found", Toast.LENGTH_SHORT);
+            return;
+        }
+
         Log.d("Demo", "The size of the list of articles is: " + articles.size());
 
         title.setText(articles.get(0).getTitle());
         date.setText(articles.get(0).getPublishedAtDate());
+        setLink(articles.get(currentIndex).getUrl());
         Picasso.with(MainActivity.this).load(articles.get(0).getUrlToImage()).into(main);
         description.setText("");
-        if(!articles.get(0).getDescription().equals(null)){
+        if(!articles.get(0).getDescription().equals("") || !articles.get(0).getDescription().equals(null)){
             description.setText(articles.get(0).getDescription());
         }
         counter.setText("1 out of "+articles.size());
@@ -165,6 +193,49 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
 
             title.setText(articles.get(currentIndex).getTitle());
             date.setText(articles.get(currentIndex).getPublishedAtDate());
+            setLink(articles.get(currentIndex).getUrl());
+            Picasso.with(MainActivity.this).load(articles.get(currentIndex).getUrlToImage()).into(main);
+            description.setText("");
+            if(!articles.get(currentIndex).getDescription().equals("null")) {
+                description.setText(articles.get(currentIndex).getDescription());
+            }
+            counter.setText(currentIndex+1 + " out of "+articles.size());
+
+        } else {
+            currentIndex = 0;
+
+            title.setText(articles.get(currentIndex).getTitle());
+            date.setText(articles.get(currentIndex).getPublishedAtDate());
+            setLink(articles.get(currentIndex).getUrl());
+            Picasso.with(MainActivity.this).load(articles.get(currentIndex).getUrlToImage()).into(main);
+            description.setText("");
+            if(!articles.get(currentIndex).getDescription().equals("null")) {
+                description.setText(articles.get(currentIndex).getDescription());
+            }
+            counter.setText(currentIndex+1 + " out of "+articles.size());
+        }
+    }
+
+    public void showPrev(){
+        if(currentIndex != 0){
+            currentIndex--;
+
+            title.setText(articles.get(currentIndex).getTitle());
+            date.setText(articles.get(currentIndex).getPublishedAtDate());
+            setLink(articles.get(currentIndex).getUrl());
+            Picasso.with(MainActivity.this).load(articles.get(currentIndex).getUrlToImage()).into(main);
+            description.setText("");
+            if(!articles.get(currentIndex).getDescription().equals("null")) {
+                description.setText(articles.get(currentIndex).getDescription());
+            }
+            counter.setText(currentIndex+1 + " out of "+articles.size());
+
+        } else {
+            currentIndex = articles.size()-1;
+
+            title.setText(articles.get(currentIndex).getTitle());
+            date.setText(articles.get(currentIndex).getPublishedAtDate());
+            setLink(articles.get(currentIndex).getUrl());
             Picasso.with(MainActivity.this).load(articles.get(currentIndex).getUrlToImage()).into(main);
             description.setText("");
             if(!articles.get(currentIndex).getDescription().equals("null")) {
@@ -175,20 +246,12 @@ public class MainActivity extends AppCompatActivity implements AsyncData.IData {
         }
     }
 
-    public void showPrev(){
-        if(currentIndex != 0){
-            currentIndex--;
+    public String getLink(){
+        return link;
+    }
 
-            title.setText(articles.get(currentIndex).getTitle());
-            date.setText(articles.get(currentIndex).getPublishedAtDate());
-            Picasso.with(MainActivity.this).load(articles.get(currentIndex).getUrlToImage()).into(main);
-            description.setText("");
-            if(!articles.get(currentIndex).getDescription().equals("null")) {
-                description.setText(articles.get(currentIndex).getDescription());
-            }
-            counter.setText(currentIndex+1 + " out of "+articles.size());
-
-        }
+    public void setLink(String url){
+        this.link = url;
     }
 
 }

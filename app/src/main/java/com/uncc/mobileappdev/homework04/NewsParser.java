@@ -1,11 +1,6 @@
-package com.uncc.mobileappdev.inclass06;
+package com.uncc.mobileappdev.homework04;
 
-import android.util.Log;
-import android.util.Xml;
-
-import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;

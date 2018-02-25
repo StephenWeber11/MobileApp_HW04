@@ -1,4 +1,4 @@
-package com.uncc.mobileappdev.inclass06;
+package com.uncc.mobileappdev.homework04;
 
 import org.junit.Test;
 

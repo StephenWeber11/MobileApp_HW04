@@ -1,4 +1,4 @@
-package com.uncc.mobileappdev.inclass06;
+package com.uncc.mobileappdev.homework04;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
